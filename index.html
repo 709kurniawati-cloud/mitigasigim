@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Waspada & Tangguh: Misi Mitigasi Bencana</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
+        body { font-family: 'Poppins', sans-serif; background-color: #f0f4f8; overflow-x: hidden; }
+        .card-gradient { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .correct-bg { background-color: #d1fae5; border: 2px solid #10b981; }
+        .wrong-bg { background-color: #fee2e2; border: 2px solid #ef4444; }
+        .transition-all { transition: all 0.3s ease; }
+        .timer-low { color: #ef4444; animation: pulse 1s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+        
+        /* Mini Game Styles */
+        #catcher { transition: left 0.1s ease-out; }
+        .falling-item { position: absolute; font-size: 2rem; user-select: none; }
+        
+        /* Custom Scrollbar for Learning Goal */
+        .custom-scroll::-webkit-scrollbar { width: 6px; }
+        .custom-scroll::-webkit-scrollbar-track { background: #f1f1f1; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #667eea; border-radius: 10px; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-4">
+
+    <!-- Audio Element -->
+    <audio id="bg-music" loop>
+        <source src="https://github.com/709kurniawati-cloud/lagugim/raw/refs/heads/main/The_Last_Measured_Step.mp3" type="audio/mpeg">
+    </audio>
+
+    <!-- Game Container -->
+    <div id="game-container" class="w-full max-w-2xl bg-white rounded-3xl shadow-2xl overflow-hidden relative min-h-[600px] flex flex-col">
+        
+        <!-- Music Toggle -->
+        <button onclick="toggleMusic()" id="music-btn" class="absolute top-4 right-4 z-50 bg-black/20 hover:bg-black/40 p-2 rounded-full text-white backdrop-blur-sm transition-all">
+            <span id="music-icon">🔇</span>
+        </button>
+
+        <!-- Header -->
+        <div class="card-gradient p-6 text-white text-center">
+            <h1 class="text-2xl font-bold uppercase tracking-wider">Waspada & Tangguh</h1>
+            <p class="text-sm opacity-90 italic">Mitigasi Bencana SMK Kelas X</p>
+        </div>
+
+        <!-- Main Content Area -->
+        <div id="screen-content" class="flex-grow p-8 relative">
+            
+            <!-- 1. Identity Screen -->
+            <div id="identity-screen" class="text-center space-y-6">
+                <div class="text-6xl">📝</div>
+                <h2 class="text-xl font-semibold text-gray-800">Identitas Siswa</h2>
+                <div class="space-y-4 text-left">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-600">Nama Lengkap</label>
+                        <input type="text" id="input-name" class="w-full mt-1 p-3 border rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="Masukkan nama Anda...">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-600">Kelas</label>
+                        <input type="text" id="input-class" class="w-full mt-1 p-3 border rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="Contoh: X TKJ 1">
+                    </div>
+                </div>
+                <button onclick="saveIdentity()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl shadow-lg transition-all">
+                    Masuk ke Menu Utama
+                </button>
+            </div>
+
+            <!-- 2. Main Menu Screen -->
+            <div id="menu-screen" class="hidden text-center space-y-6">
+                <h2 class="text-2xl font-bold text-gray-800">Halo, <span id="user-display" class="text-indigo-600">Siswa</span>!</h2>
+                <p class="text-gray-500 text-sm">Pilih menu untuk memulai pembelajaran:</p>
+                
+                <div class="grid grid-cols-1 gap-4">
+                    <button onclick="showSection('learning-goal')" class="flex items-center p-4 bg-blue-50 border-2 border-blue-100 rounded-2xl hover:bg-blue-100 transition-all group text-left">
+                        <span class="text-3xl mr-4 group-hover:scale-110 transition-transform">🎯</span>
+                        <div>
+                            <h4 class="font-bold text-blue-800">Tujuan Pembelajaran</h4>
+                            <p class="text-xs text-blue-600">Materi & Panduan Mitigasi</p>
+                        </div>
+                    </button>
+
+                    <button onclick="startQuiz()" class="flex items-center p-4 bg-green-50 border-2 border-green-100 rounded-2xl hover:bg-green-100 transition-all group text-left">
+                        <span class="text-3xl mr-4 group-hover:scale-110 transition-transform">✏️</span>
+                        <div>
+                            <h4 class="font-bold text-green-800">Latihan Soal</h4>
+                            <p class="text-xs text-green-600">Uji pemahamanmu tentang mitigasi.</p>
+                        </div>
+                    </button>
+
+                    <button onclick="startMiniGame()" class="flex items-center p-4 bg-yellow-50 border-2 border-yellow-100 rounded-2xl hover:bg-yellow-100 transition-all group text-left">
+                        <span class="text-3xl mr-4 group-hover:scale-110 transition-transform">🎮</span>
+                        <div>
+                            <h4 class="font-bold text-yellow-800">Gim Seru</h4>
+                            <p class="text-xs text-yellow-600">Kumpulkan perlengkapan Tas Siaga!</p>
+                        </div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 3. Learning Goals Section -->
+            <div id="learning-goal" class="hidden space-y-4 max-h-[450px] overflow-y-auto custom-scroll pr-2">
+                <button onclick="showSection('menu-screen')" class="text-indigo-600 text-sm font-bold mb-2 flex items-center">
+                    ← Kembali ke Menu
+                </button>
+                <h3 class="text-xl font-bold text-gray-800 border-b-2 border-indigo-500 pb-2">Tujuan Pembelajaran</h3>
+                
+                <!-- Displaying the provided image -->
+                <div class="my-4 rounded-xl overflow-hidden border-2 border-indigo-100 shadow-md">
+                    <img src="https://i.imgur.com/K7FsY1k.png" alt="Poster Mitigasi Bencana" class="w-full h-auto block" onerror="this.src='https://via.placeholder.com/600x400?text=Gambar+Mitigasi+Bencana'">
+                    <p class="bg-indigo-50 p-2 text-[10px] text-center text-indigo-700 font-semibold italic">
+                        [Gambar Panduan Mitigasi Bencana]
+                    </p>
+                </div>
+
+                <ul class="space-y-3 text-gray-700 text-sm list-disc pl-5">
+                    <li>Siswa mampu mengidentifikasi jenis-jenis bencana alam dan non-alam di Indonesia.</li>
+                    <li>Siswa memahami tindakan prabencana, saat bencana, dan pascabencana secara tepat.</li>
+                    <li>Siswa mampu menyiapkan "Tas Siaga Bencana" sebagai bagian dari kesiapsiagaan mandiri.</li>
+                    <li>Siswa dapat menerapkan prosedur evakuasi yang aman di lingkungan sekolah.</li>
+                </ul>
+                <div class="bg-indigo-50 p-4 rounded-xl mt-4 mb-2">
+                    <p class="text-xs italic text-indigo-700 font-medium">"Mitigasi bukan hanya tentang bertahan hidup, tapi tentang cara kita cerdas menghadapi situasi kritis."</p>
+                </div>
+            </div>
+
+            <!-- 4. Quiz Screen -->
+            <div id="quiz-screen" class="hidden space-y-6">
+                <div class="grid grid-cols-3 gap-4 bg-gray-50 p-4 rounded-2xl border border-gray-100 shadow-sm">
+                    <div class="text-center border-r border-gray-200">
+                        <p class="text-[10px] uppercase text-gray-400 font-bold">Waktu</p>
+                        <p id="timer" class="text-xl font-black text-indigo-600">30s</p>
+                    </div>
+                    <div class="text-center border-r border-gray-200">
+                        <p class="text-[10px] uppercase text-gray-400 font-bold">Skor</p>
+                        <p id="score-label" class="text-xl font-black text-green-600">0</p>
+                    </div>
+                    <div class="text-center">
+                        <p class="text-[10px] uppercase text-gray-400 font-bold">Siswa</p>
+                        <p id="display-name" class="text-xs font-bold text-gray-700 truncate px-1">-</p>
+                    </div>
+                </div>
+                <div id="category-label" class="inline-block px-3 py-1 bg-indigo-100 text-indigo-700 text-xs font-bold rounded-full">
+                    Kategori: Gempa Bumi
+                </div>
+                <h3 id="question-text" class="text-lg font-bold text-gray-800 leading-tight"></h3>
+                <div id="options-container" class="space-y-3"></div>
+                <div id="feedback" class="hidden p-4 rounded-xl text-sm font-medium"></div>
+                <button id="next-btn" onclick="nextQuestion()" class="hidden w-full bg-gray-800 text-white py-3 rounded-xl font-bold hover:bg-black transition-all">Lanjut</button>
+            </div>
+
+            <!-- 5. Mini Game Screen -->
+            <div id="minigame-screen" class="hidden h-full relative">
+                <div class="absolute top-0 left-0 w-full flex justify-between p-2 z-20 text-xs font-bold bg-white/80 rounded-lg shadow-sm">
+                    <span>Skor: <span id="mini-score">0</span></span>
+                    <span>Waktu: <span id="mini-timer">20</span>s</span>
+                </div>
+                <div id="game-area" class="relative w-full h-[350px] bg-sky-50 border-2 border-dashed border-sky-200 rounded-2xl overflow-hidden mt-8">
+                    <!-- Falling items here -->
+                    <div id="catcher" class="absolute bottom-2 left-1/2 -translate-x-1/2 text-4xl cursor-pointer">🎒</div>
+                </div>
+                <p class="text-[10px] text-center mt-4 text-gray-500 italic">Geser mouse/tap layar untuk gerakkan tas!</p>
+                <button onclick="showSection('menu-screen')" class="mt-4 w-full py-2 bg-gray-200 text-gray-700 rounded-lg text-xs font-bold hover:bg-gray-300 transition-all">Keluar ke Menu</button>
+            </div>
+
+            <!-- 6. Result Screen -->
+            <div id="end-screen" class="hidden text-center space-y-6">
+                <div id="result-icon" class="text-6xl">🏆</div>
+                <h2 class="text-2xl font-bold text-gray-800">Hasil Akhir</h2>
+                <div class="bg-gray-100 p-6 rounded-2xl">
+                    <p id="final-identity" class="text-gray-700 font-bold mb-2"></p>
+                    <p id="final-score" class="text-6xl font-black text-indigo-600">0</p>
+                </div>
+                <p id="result-message" class="text-gray-600 italic px-4"></p>
+                <button onclick="showSection('menu-screen')" class="bg-indigo-600 text-white py-3 px-8 rounded-full font-bold hover:bg-indigo-700 transition-all shadow-lg">Kembali ke Menu Utama</button>
+            </div>
+
+        </div>
+    </div>
+
+    <footer class="mt-8 text-gray-400 text-xs text-center leading-loose">
+        &copy; 2024 Media Pembelajaran Interaktif SMK<br>
+        <span class="font-bold text-gray-500">kurniawati@smkn12pandeglang</span>
+    </footer>
+
+    <script>
+        // State
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let userName = "";
+        let userClass = "";
+        let timeLeft = 30;
+        let timerInterval;
+        let isMusicPlaying = false;
+        
+        // Mini Game State
+        let miniScore = 0;
+        let miniTimer = 20;
+        let miniGameInterval;
+
+        const questions = [
+            {
+                category: "Gempa Bumi",
+                question: "Kamu sedang berada di dalam kelas di lantai 2 saat gempa kuat terjadi. Apa tindakan pertama yang harus dilakukan?",
+                options: [
+                    { text: "Berlari secepat mungkin ke arah tangga darurat", correct: false, feedback: "Salah. Berlari saat gempa berisiko jatuh atau tertimpa benda." },
+                    { text: "Berlindung di bawah meja yang kokoh (Drop, Cover, Hold On)", correct: true, feedback: "Benar! Lindungi kepala dan leher dari reruntuhan plafon atau benda jatuh." },
+                    { text: "Berdiri di dekat jendela untuk melihat situasi di luar", correct: false, feedback: "Bahaya! Kaca jendela bisa pecah dan melukaimu." }
+                ]
+            },
+            {
+                category: "Banjir",
+                question: "Alat apa yang paling penting disiapkan dalam Tas Siaga Bencana?",
+                options: [
+                    { text: "Koleksi mainan dan konsol game", correct: false, feedback: "Kurang tepat. Prioritaskan barang darurat." },
+                    { text: "Dokumen penting, obat, senter, dan air minum", correct: true, feedback: "Tepat! Tas Siaga berisi kebutuhan dasar untuk bertahan 3x24 jam." },
+                    { text: "Peralatan olahraga berat", correct: false, feedback: "Salah. Barang harus ringan dan fungsional." }
+                ]
+            },
+            {
+                category: "Kebakaran",
+                question: "Apa singkatan dari teknik penggunaan APAR?",
+                options: [
+                    { text: "PASS (Pull, Aim, Squeeze, Sweep)", correct: true, feedback: "Benar! Tarik kunci, arahkan ke api, tekan tuas, dan sapukan nozzle." },
+                    { text: "PUSH (Pull, Up, Stay, Hot)", correct: false, feedback: "Salah." },
+                    { text: "STOP (Stay, Take, Open, Pull)", correct: false, feedback: "Salah." }
+                ]
+            }
+        ];
+
+        // Core Functions
+        function toggleMusic() {
+            const music = document.getElementById('bg-music');
+            const icon = document.getElementById('music-icon');
+            if (isMusicPlaying) {
+                music.pause();
+                icon.innerText = "🔇";
+            } else {
+                music.play();
+                icon.innerText = "🔊";
+            }
+            isMusicPlaying = !isMusicPlaying;
+        }
+
+        function showSection(id) {
+            // Hide all
+            document.getElementById('identity-screen').classList.add('hidden');
+            document.getElementById('menu-screen').classList.add('hidden');
+            document.getElementById('learning-goal').classList.add('hidden');
+            document.getElementById('quiz-screen').classList.add('hidden');
+            document.getElementById('minigame-screen').classList.add('hidden');
+            document.getElementById('end-screen').classList.add('hidden');
+            
+            // Show target
+            document.getElementById(id).classList.remove('hidden');
+            
+            // Stop intervals if leaving games
+            if (id !== 'quiz-screen') clearInterval(timerInterval);
+            if (id !== 'minigame-screen') {
+                clearInterval(miniGameInterval);
+                const area = document.getElementById('game-area');
+                area.querySelectorAll('.falling-item').forEach(item => item.remove());
+            }
+        }
+
+        function saveIdentity() {
+            const name = document.getElementById('input-name').value;
+            const kls = document.getElementById('input-class').value;
+            if (!name || !kls) return alert("Lengkapi data!");
+            
+            userName = name;
+            userClass = kls;
+            document.getElementById('user-display').innerText = userName;
+            document.getElementById('display-name').innerText = userName + " ("+kls+")";
+            
+            showSection('menu-screen');
+            if (!isMusicPlaying) toggleMusic();
+        }
+
+        // Quiz Logic
+        function startQuiz() {
+            score = 0;
+            currentQuestionIndex = 0;
+            document.getElementById('score-label').innerText = "0";
+            showSection('quiz-screen');
+            showQuestion();
+        }
+
+        function showQuestion() {
+            const q = questions[currentQuestionIndex];
+            document.getElementById('question-text').innerText = q.question;
+            document.getElementById('category-label').innerText = "Kategori: " + q.category;
+            
+            const container = document.getElementById('options-container');
+            container.innerHTML = '';
+            document.getElementById('feedback').classList.add('hidden');
+            document.getElementById('next-btn').classList.add('hidden');
+
+            q.options.forEach(opt => {
+                const b = document.createElement('button');
+                b.innerText = opt.text;
+                b.className = "w-full text-left p-4 rounded-xl border-2 border-gray-100 hover:border-indigo-300 transition-all text-sm font-medium bg-white";
+                b.onclick = () => {
+                    clearInterval(timerInterval);
+                    const allButtons = container.querySelectorAll('button');
+                    allButtons.forEach(btn => btn.disabled = true);
+                    
+                    const fb = document.getElementById('feedback');
+                    fb.innerText = opt.feedback;
+                    fb.classList.remove('hidden');
+                    
+                    if (opt.correct) {
+                        b.classList.add('correct-bg');
+                        fb.className = "p-4 rounded-xl text-sm font-medium bg-green-100 text-green-700";
+                        score += 33.3;
+                    } else {
+                        b.classList.add('wrong-bg');
+                        fb.className = "p-4 rounded-xl text-sm font-medium bg-red-100 text-red-700";
+                    }
+                    document.getElementById('score-label').innerText = Math.round(score);
+                    document.getElementById('next-btn').classList.remove('hidden');
+                };
+                container.appendChild(b);
+            });
+            startTimer();
+        }
+
+        function startTimer() {
+            timeLeft = 30;
+            document.getElementById('timer').innerText = timeLeft + "s";
+            clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                document.getElementById('timer').innerText = timeLeft + "s";
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    alert("Waktu habis!");
+                    nextQuestion();
+                }
+            }, 1000);
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < questions.length) showQuestion();
+            else finishQuiz();
+        }
+
+        function finishQuiz() {
+            showSection('end-screen');
+            const finalScore = Math.round(score);
+            document.getElementById('final-score').innerText = finalScore;
+            document.getElementById('final-identity').innerText = userName + " ("+userClass+")";
+            document.getElementById('result-message').innerText = finalScore > 60 ? "Hebat! Kamu paham mitigasi." : "Ayo belajar lagi!";
+        }
+
+        // Mini Game: Catch Tas Siaga
+        function startMiniGame() {
+            showSection('minigame-screen');
+            miniScore = 0;
+            miniTimer = 20;
+            document.getElementById('mini-score').innerText = miniScore;
+            document.getElementById('mini-timer').innerText = miniTimer;
+            
+            const area = document.getElementById('game-area');
+            const catcher = document.getElementById('catcher');
+            
+            // Mouse/Touch movement
+            const moveHandler = (e) => {
+                const rect = area.getBoundingClientRect();
+                let clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                let x = clientX - rect.left - (catcher.offsetWidth/2);
+                x = Math.max(0, Math.min(x, area.offsetWidth - catcher.offsetWidth));
+                catcher.style.left = x + "px";
+            };
+
+            area.onmousemove = moveHandler;
+            area.ontouchmove = moveHandler;
+
+            // Spawn Items
+            const items = ['🔦', '💊', '🥫', '📜', '💧', '🩹'];
+            miniGameInterval = setInterval(() => {
+                miniTimer -= 0.1;
+                document.getElementById('mini-timer').innerText = Math.max(0, Math.ceil(miniTimer));
+                
+                if (miniTimer <= 0) {
+                    clearInterval(miniGameInterval);
+                    alert("Waktu habis! Tas Siagamu terkumpul " + miniScore + " item.");
+                    showSection('menu-screen');
+                    return;
+                }
+
+                if (Math.random() < 0.05) {
+                    const item = document.createElement('div');
+                    item.className = "falling-item";
+                    item.innerText = items[Math.floor(Math.random() * items.length)];
+                    item.style.left = Math.random() * (area.offsetWidth - 30) + "px";
+                    item.style.top = "-40px";
+                    area.appendChild(item);
+
+                    let pos = -40;
+                    const fall = setInterval(() => {
+                        pos += 5;
+                        item.style.top = pos + "px";
+
+                        const cRect = catcher.getBoundingClientRect();
+                        const iRect = item.getBoundingClientRect();
+
+                        if (iRect.bottom > cRect.top && iRect.left < cRect.right && iRect.right > cRect.left && iRect.top < cRect.bottom) {
+                            miniScore++;
+                            document.getElementById('mini-score').innerText = miniScore;
+                            item.remove();
+                            clearInterval(fall);
+                        }
+
+                        if (pos > area.offsetHeight) {
+                            item.remove();
+                            clearInterval(fall);
+                        }
+                    }, 20);
+                }
+            }, 100);
+        }
+    </script>
+</body>
+</html>
